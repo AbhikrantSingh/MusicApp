@@ -1,18 +1,20 @@
 const express = require("express")
 const cors = require("cors")
 const bodyParser = require("body-parser")
+const lyricsFinder = require("lyrics-finder")
 const SpotifyWebApi = require("spotify-web-api-node")
 
 const app = express()
 app.use(cors())
 app.use(bodyParser.json())
+app.use(bodyParser.urlencoded({ extended: true }))
 
 app.post("/refresh", (req, res) => {
   const refreshToken = req.body.refreshToken
   const spotifyApi = new SpotifyWebApi({
-    redirectUri: 'http://localhost:3000',
-    clientId: dd00fd21456d4854957a6a86addcefeb,
-    clientSecret: c06cdd2e2a6d4514ae7f14c3aeba56a1,
+    redirectUri: process.env.REDIRECT_URI,
+    clientId: process.env.CLIENT_ID,
+    clientSecret: process.env.CLIENT_SECRET,
     refreshToken,
   })
 
@@ -33,9 +35,9 @@ app.post("/refresh", (req, res) => {
 app.post("/login", (req, res) => {
   const code = req.body.code
   const spotifyApi = new SpotifyWebApi({
-    redirectUri: 'http://localhost:3000',
-    clientId: dd00fd21456d4854957a6a86addcefeb,
-    clientSecret: c06cdd2e2a6d4514ae7f14c3aeba56a1,
+    redirectUri: process.env.REDIRECT_URI,
+    clientId: process.env.CLIENT_ID,
+    clientSecret: process.env.CLIENT_SECRET,
   })
 
   spotifyApi
@@ -49,6 +51,13 @@ app.post("/login", (req, res) => {
     })
     .catch(err => {
       res.sendStatus(400)
-      console.log(err)
     })
 })
+
+app.get("/lyrics", async (req, res) => {
+  const lyrics =
+    (await lyricsFinder(req.query.artist, req.query.track)) || "No Lyrics Found"
+  res.json({ lyrics })
+})
+
+app.listen(3001)
